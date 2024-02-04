@@ -1,0 +1,47 @@
+@echo off
+setlocal EnableDelayedExpansion
+
+REM Define OpenShift environments
+set "OpenShiftEnvironments[1]=production=https://prod-openshift-cluster"
+set "OpenShiftEnvironments[2]=staging=https://staging-openshift-cluster"
+set "OpenShiftEnvironments[3]=development=https://dev-openshift-cluster"
+
+REM Display available environments
+echo Choose an OpenShift environment:
+set /a "i=0"
+for /f "tokens=2,* delims==" %%A in ('set OpenShiftEnvironments[') do (
+    set /a "i+=1"
+    echo !i!. %%B
+)
+
+REM Prompt user to select an environment
+set /p "selectedOption=Enter the number corresponding to your choice: "
+set "environment="
+for /f "tokens=2,* delims==" %%A in ('set OpenShiftEnvironments[%selectedOption%]') do (
+    set "environment=%%B"
+)
+
+REM Check if a valid environment was selected
+if not defined environment (
+    echo Invalid selection. Please choose a valid option.
+    exit /b 1
+)
+
+REM Prompt for username and password
+set /p "Username=Enter your OpenShift username for %environment%: "
+set /p "Password=Enter your OpenShift password for %environment%: "
+
+REM Log in to OpenShift
+oc login !environment! -u !Username! -p !Password!
+
+REM Check if login was successful
+if %errorlevel% equ 0 (
+    echo Login to %environment% successful.
+    
+    REM Optionally, you can set the default project or perform other actions here.
+    REM For example, setting the default project:
+    REM set /p "Project=Enter the default project: "
+    REM oc project !Project!
+) else (
+    echo Login to %environment% failed. Please check your credentials and try again.
+)
